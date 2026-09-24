@@ -1,4 +1,5 @@
 package components
+
 templ Base() {
     <!DOCTYPE html>
     <html>
@@ -13,6 +14,16 @@ templ Base() {
         <main class="flex-1 flex flex-col">
         { children... }
         </main>
+        @Footer()
         </body>
     </html>
+}
+
+templ Footer() {
+	<footer class="bg-blue-900 text-blue-100 text-sm py-4 px-6 text-center">
+		<p>
+			Game images and data provided by:
+            <a href="https://rawg.io" target="_blank" rel="noopener noreferrer" class="underline hover:text-white">RAWG</a>
+		</p>
+	</footer>
 }

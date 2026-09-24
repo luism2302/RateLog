@@ -7,11 +7,15 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/luism2302/RateLog/internal/client"
 )
 
 type application struct {
 	logger *slog.Logger
 	cfg    config
+	client *client.Client
 }
 type config struct {
 	addr int
@@ -25,10 +29,21 @@ func main() {
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	if err := godotenv.Load(); err != nil {
+		logger.Error("couldn't load .env")
+		os.Exit(1)
+	}
+
+	apiKey := os.Getenv("RAWG_API_KEY")
+	if apiKey == "" {
+		logger.Error("couldn't find api RAWG_API_KEY in .env")
+		os.Exit(1)
+	}
 
 	app := &application{
 		logger: logger,
 		cfg:    cfg,
+		client: client.New(apiKey),
 	}
 
 	srv := http.Server{

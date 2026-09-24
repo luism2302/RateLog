@@ -13,10 +13,10 @@ func (app *application) logError(request *http.Request, err error) {
 func (app application) serverErrorResponse(responseWriter http.ResponseWriter, request *http.Request, err error) {
 	app.logError(request, err)
 	responseWriter.WriteHeader(http.StatusInternalServerError)
-	renderTemplate(responseWriter, components.ErrTemplate("Internal Server Error"))
+	app.renderTemplate(responseWriter, components.ErrTemplate("Internal Server Error"))
 }
 
 func (app application) notFoundResponse(responseWriter http.ResponseWriter, request *http.Request) {
 	responseWriter.WriteHeader(http.StatusNotFound)
-	renderTemplate(responseWriter, components.ErrTemplate("Not Found"))
+	app.renderTemplate(responseWriter, components.ErrTemplate("Not Found"))
 }
