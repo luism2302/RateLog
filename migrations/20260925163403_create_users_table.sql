@@ -1,0 +1,12 @@
+-- +goose Up
+CREATE TABLE IF NOT EXISTS users(
+     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+     name TEXT NOT NULL,
+     email TEXT NOT NULL UNIQUE,
+     password_hash BYTEA NOT NULL,
+     created_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
+     version INTEGER NOT NULL DEFAULT 1
+);
+
+-- +goose Down
+DROP TABLE IF EXISTS users;

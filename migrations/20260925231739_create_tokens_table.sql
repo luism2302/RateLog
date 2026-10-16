@@ -1,0 +1,9 @@
+-- +goose Up
+CREATE TABLE IF NOT EXISTS tokens(
+     hash BYTEA PRIMARY KEY,
+     user_id BIGINT NOT NULL REFERENCES users ON DELETE CASCADE,
+     expires TIMESTAMP(0) WITH TIME ZONE NOT NULL
+);
+
+-- +goose Down
+DROP TABLE IF EXISTS tokens;

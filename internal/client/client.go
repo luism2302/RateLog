@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"unicode"
 
 	"github.com/luism2302/RateLog/internal/data"
 )
@@ -28,8 +29,7 @@ func New(apiKey string) *Client {
 }
 
 func (c *Client) SearchGameByTitle(title string) ([]data.Game, error) {
-	reqURL := fmt.Sprintf("%s/games?key=%s&search=%s&exclude_additions=true&page_size=40", baseURL, c.apiKey, url.PathEscape(title))
-	fmt.Println(reqURL)
+	reqURL := fmt.Sprintf("%s/games?key=%s&search=%s&page_size=40", baseURL, c.apiKey, url.PathEscape(title))
 	response, err := c.Client.Get(reqURL)
 	if err != nil {
 		return nil, err
@@ -51,11 +51,11 @@ func (c *Client) SearchGameByTitle(title string) ([]data.Game, error) {
 
 	games := []data.Game{}
 	for _, result := range output.Results {
-		if !strings.Contains(strings.ToLower(result.Name), strings.ToLower(title)) || result.Released == "" {
+		if !strings.Contains(cleanTitle(result.Name), cleanTitle(title)) || result.Released == "" || result.BackgroundImage == "" {
 			continue
 		}
 
-		game, err := data.NewGame(result.ID, result.Name, result.Released, result.BackgroundImage)
+		game, err := data.NewGame(result.ID, result.Added, result.Name, result.Released, result.BackgroundImage)
 		if err != nil {
 			return nil, err
 		}
@@ -73,4 +73,15 @@ func readJSON(response *http.Response, data any) error {
 		return err
 	}
 	return nil
+}
+
+func cleanTitle(title string) string {
+	var b strings.Builder
+	for _, char := range title {
+		if unicode.IsLetter(char) || unicode.IsNumber(char) || unicode.IsSpace(char) {
+			b.WriteRune(char)
+		}
+	}
+
+	return strings.ToLower(b.String())
 }

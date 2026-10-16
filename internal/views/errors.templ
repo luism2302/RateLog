@@ -1,0 +1,14 @@
+package views
+
+
+templ ErrTemplate(msg string) {
+     @BaseLogin() {
+          <div class="flex-1 flex items-center justify-center bg-base-200 px-4 py-12">
+               <div class="text-center max-w-md">
+                    <p class="text-sm font-semibold uppercase tracking-wider text-primary">Something went wrong</p>
+                    <h1 class="mt-2 text-3xl font-bold tracking-tight">{ msg }</h1>
+                    <a href="/" class="btn btn-primary mt-8">Back to home</a>
+               </div>
+          </div>
+     }
+}
