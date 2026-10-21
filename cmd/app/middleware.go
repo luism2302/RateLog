@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/luism2302/RateLog/internal/data"
@@ -20,20 +19,15 @@ func (app *application) authenticate(next http.Handler) http.HandlerFunc {
 		v := validator.New()
 
 		if data.ValidateToken(token, v); !v.Valid() {
-			app.serverErrorResponse(responseWriter, request, errors.New("Token Validation Failed"))
+			removeAuthCookie(responseWriter)
+			http.Redirect(responseWriter, request, "/login", http.StatusSeeOther)
 			return
 		}
 
 		user, err := app.models.Users.GetUserForToken(token)
 		if err != nil {
-			switch {
-			case errors.Is(err, data.ErrRecordNotFound):
-				app.serverErrorResponse(responseWriter, request, err)
-				return
-			default:
-				app.serverErrorResponse(responseWriter, request, errors.New("User Validation Failed"))
-				return
-			}
+			app.serverErrorResponse(responseWriter, request, err)
+			return
 		}
 		request = app.setAuthenticatedUser(request, user)
 		next.ServeHTTP(responseWriter, request)

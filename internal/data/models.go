@@ -7,6 +7,7 @@ type Models struct {
 	Tokens    TokenModel
 	Games     GameModel
 	UserGames UserGamesModel
+	Reviews   ReviewsModel
 }
 
 func NewModels(pool *pgxpool.Pool) Models {
@@ -15,5 +16,6 @@ func NewModels(pool *pgxpool.Pool) Models {
 		Tokens:    TokenModel{DB: pool},
 		Games:     GameModel{DB: pool},
 		UserGames: UserGamesModel{DB: pool},
+		Reviews:   ReviewsModel{DB: pool},
 	}
 }

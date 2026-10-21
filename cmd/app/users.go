@@ -35,8 +35,15 @@ func (app *application) loginUserHandler(responseWriter http.ResponseWriter, req
 	// authenticate user
 	user, err := app.models.Users.GetUserByEmail(formValues.Email)
 	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
-		return
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			user.Password.Matches(formValues.Password)
+			app.invalidResponse(responseWriter, request, err)
+			return
+		default:
+			app.serverErrorResponse(responseWriter, request, err)
+			return
+		}
 	}
 
 	matches, err := user.Password.Matches(formValues.Password)
@@ -48,6 +55,7 @@ func (app *application) loginUserHandler(responseWriter http.ResponseWriter, req
 	if !matches {
 		v.AddError("password", "Incorrect Password")
 		app.renderTemplate(responseWriter, views.LoginPage(formValues, v))
+		return
 	}
 
 	// token

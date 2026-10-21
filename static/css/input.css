@@ -89,3 +89,15 @@
   --depth: 1;
   --noise: 0;
 }
+
+/* ---------- Estrellas de solo lectura ----------
+   daisyUI pinta la estrella marcada solo con [aria-current=true], pero templ
+   renderiza `aria-current?={ cond }` como `aria-current` sin valor. Esta regla
+   acepta el atributo sin valor. Va directamente en `utilities` (fuera de las
+   subcapas de daisyUI) para ganar en la cascada. */
+@layer utilities {
+  .rating [aria-current]:not([aria-current="false"]),
+  .rating :has(~ [aria-current]:not([aria-current="false"])) {
+    opacity: 1;
+  }
+}

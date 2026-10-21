@@ -17,7 +17,7 @@ func NewLoginFormValues(email, password string) LoginFormValues {
 
 func ValidateLoginForm(values LoginFormValues, v *validator.Validator) {
 	validator.ValidateEmail(values.Email, v)
-	validator.ValidatePassword(values.Password, v)
+	v.Check(values.Password != "", "password", "Cannot be blank")
 }
 
 type SignupFormValues struct {
@@ -70,4 +70,22 @@ func ValidateAddGameForm(values AddGameFormValues, v *validator.Validator) {
 	if err != nil {
 		v.AddError("released", "must be a valid date")
 	}
+}
+
+type ReviewFormValues struct {
+	Body   string
+	Rating int
+}
+
+func NewReviewFormValues(body string, rating int) ReviewFormValues {
+	return ReviewFormValues{
+		Body:   body,
+		Rating: rating,
+	}
+}
+
+func ValidateReviewGameForm(values ReviewFormValues, v *validator.Validator) {
+	v.Check(values.Body != "", "body", "Cannot be blank")
+	v.Check(values.Rating >= 1, "rating", "Cannot be lower than 0")
+	v.Check(values.Rating <= 5, "rating", "Cannot be greater than 5")
 }

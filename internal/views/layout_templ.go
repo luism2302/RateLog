@@ -8,9 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"github.com/luism2302/RateLog/internal/data"
-)
+import "github.com/luism2302/RateLog/internal/data"
 
 func BaseLogin() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -33,7 +31,7 @@ func BaseLogin() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><title>Rate Log</title><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap\" rel=\"stylesheet\"><link href=\"/static/css/output.css\" rel=\"stylesheet\"></head><body class=\"bg-base-100 text-base-content font-sans antialiased min-h-screen flex flex-col\"><main class=\"flex-1 flex flex-col\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><title>Rate Log</title><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap\" rel=\"stylesheet\"><link href=\"/static/css/output.css\" rel=\"stylesheet\"></head><body class=\"bg-base-100 text-base-content font-sans antialiased min-h-screen flex flex-col\"><!-- Cabecera mínima: solo la marca, enlaza al inicio --><header class=\"bg-base-100 border-b border-base-300\"><div class=\"navbar px-4\"><a href=\"/\" class=\"btn btn-ghost px-2 text-xl font-extrabold tracking-tight text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\">Rate Log</a></div></header><main class=\"flex-1 flex flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -160,35 +158,48 @@ func NavBar(user *data.User) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"navbar bg-base-100 border-b border-base-300 px-4\"><div class=\"flex-none\"><button class=\"btn btn-square btn-ghost\"><svg aria-label=\"Menu\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"inline-block h-5 w-5 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M4 6h16M4 12h16M4 18h16\"></path></svg></button></div><div class=\"flex-1\"><a class=\"btn btn-ghost text-xl font-extrabold tracking-tight text-primary\">Rate Log</a></div><div class=\"flex-none flex items-center gap-1\"><a href=\"/searchGame\" class=\"btn btn-ghost btn-sm font-medium\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z\"></path></svg> <span class=\"hidden sm:inline\">Search Game</span> <span class=\"sr-only sm:hidden\">Search Game</span></a><div class=\"divider divider-horizontal mx-0 h-6 self-center\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<header class=\"bg-base-100 border-b border-base-300\"><nav aria-label=\"Main\" class=\"navbar gap-2 px-4\"><!-- Marca: siempre a la izquierda, enlaza al inicio --><div class=\"flex-1 lg:flex-none\"><a href=\"/\" class=\"btn btn-ghost px-2 text-xl font-extrabold tracking-tight text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\">Rate Log</a></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if user != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<span class=\"flex items-center gap-2 px-2 text-sm font-medium\"><span class=\"flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\"></path></svg></span> <span class=\"hidden sm:inline max-w-[10rem] truncate\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<!-- Navegación principal (escritorio) --> <ul class=\"menu menu-horizontal hidden flex-1 gap-1 px-2 text-sm font-medium lg:flex\"><li><a href=\"/search_game\" class=\"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z\"></path></svg> Search games</a></li><li><a href=\"/my_games\" class=\"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10\"></path></svg> My Games</a></li><li><a href=\"/my_reviews\" class=\"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 10h8M8 14h5m-9 6.5V6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H8l-4 3.5z\"></path></svg> My Reviews</a></li></ul><!-- Menú de usuario (Popover API): hamburguesa en móvil (incluye la navegación), avatar + nombre en escritorio --> <button type=\"button\" class=\"btn btn-ghost flex-none gap-2 px-2 lg:px-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\" popovertarget=\"user-menu\" style=\"anchor-name:--user-menu\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-6 w-6 stroke-current lg:hidden\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M4 6h16M4 12h16M4 18h16\"></path></svg> <span aria-hidden=\"true\" class=\"hidden h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary lg:flex\"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\"></path></svg></span> <span class=\"hidden max-w-[10rem] truncate text-sm font-medium lg:inline\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(user.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/layout.templ`, Line: 79, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/layout.templ`, Line: 98, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span></span><form method=\"post\" action=\"/logout\" class=\"contents\"><button type=\"submit\" class=\"btn btn-ghost btn-sm font-medium\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1\"></path></svg> <span class=\"hidden sm:inline\">Log Out</span> <span class=\"sr-only sm:hidden\">Log Out</span></button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span> <span class=\"sr-only\">Account menu</span> <svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"hidden h-4 w-4 stroke-current text-base-content/60 lg:block\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 9l-7 7-7-7\"></path></svg></button><ul popover id=\"user-menu\" class=\"dropdown dropdown-end menu mt-2 w-64 rounded-box border border-base-300 bg-base-100 p-2 text-sm font-medium shadow-xl\" style=\"position-anchor:--user-menu\"><!-- Navegación (solo móvil; en escritorio está en la barra) --><li class=\"lg:hidden\"><a href=\"/search_game\" class=\"py-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z\"></path></svg> Search games</a></li><li class=\"lg:hidden\"><a href=\"/my_games\" class=\"py-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10\"></path></svg> My Games</a></li><li class=\"lg:hidden\"><a href=\"/my_reviews\" class=\"py-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 10h8M8 14h5m-9 6.5V6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H8l-4 3.5z\"></path></svg> My Reviews</a></li><li aria-hidden=\"true\" class=\"my-1 h-px bg-base-300 lg:hidden\"></li><!-- Cuenta --><li class=\"menu-title flex flex-col gap-0.5 px-3 pb-2\"><span class=\"text-xs font-normal text-base-content/60\">Signed in as</span> <span class=\"truncate text-sm font-semibold text-base-content\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var6 string
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(user.Name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/layout.templ`, Line: 126, Col: 80}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</span></li><li><button type=\"submit\" form=\"logout-form\" class=\"py-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1\"></path></svg> Log out</button></li></ul><form id=\"logout-form\" method=\"post\" action=\"/logout\" class=\"hidden\"></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<a href=\"/login\" class=\"btn btn-ghost btn-sm font-medium\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"h-4 w-4 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1\"></path></svg> <span class=\"hidden sm:inline\">Login</span> <span class=\"sr-only sm:hidden\">Login</span></a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<!-- Sin sesión: solo acceso a la cuenta --> <div class=\"flex flex-none items-center gap-2\"><a href=\"/login\" class=\"btn btn-ghost btn-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\">Log in</a> <a href=\"/signup\" class=\"btn btn-primary btn-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary\">Sign up</a></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<button class=\"btn btn-square btn-ghost\"><svg aria-label=\"More\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" class=\"inline-block h-5 w-5 stroke-current\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z\"></path></svg></button></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</nav></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

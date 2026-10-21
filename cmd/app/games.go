@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/luism2302/RateLog/internal/data"
@@ -43,8 +42,6 @@ func (app *application) addGameHandler(responseWriter http.ResponseWriter, reque
 		return
 	}
 
-	app.logger.Info("form", slog.Any("values", formValues))
-	app.logger.Info("validator", slog.Any("errs", v.Errors))
 	if !v.Valid() {
 		app.serverErrorResponse(responseWriter, request, errors.New("Unable to parse add game form"))
 		return
@@ -70,4 +67,22 @@ func (app *application) addGameHandler(responseWriter http.ResponseWriter, reque
 		app.serverErrorResponse(responseWriter, request, err)
 		return
 	}
+
+	http.Redirect(responseWriter, request, "/search_game", http.StatusSeeOther)
+}
+
+func (app *application) myGamesHandler(responseWriter http.ResponseWriter, request *http.Request) {
+	user, ok := app.getAuthenticatedUser(request)
+	if !ok {
+		http.Redirect(responseWriter, request, "/login", http.StatusSeeOther)
+		return
+	}
+
+	games, err := app.models.Games.GetGamesForUser(user.ID)
+	if err != nil {
+		app.serverErrorResponse(responseWriter, request, err)
+		return
+	}
+
+	app.renderTemplate(responseWriter, views.MyGamesPage(games, user))
 }

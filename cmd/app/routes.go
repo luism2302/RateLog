@@ -13,8 +13,13 @@ func (app *application) routes() http.Handler {
 
 	router.ServeFiles("/static/*filepath", http.Dir("./static"))
 
+	router.Handler(http.MethodGet, "/", http.RedirectHandler("/search_game", http.StatusSeeOther))
 	router.HandlerFunc(http.MethodGet, "/search_game", app.authenticate(http.HandlerFunc(app.searchGamesHandler)))
 	router.HandlerFunc(http.MethodPost, "/add_game", app.authenticate(http.HandlerFunc(app.addGameHandler)))
+	router.HandlerFunc(http.MethodGet, "/my_games", app.authenticate(http.HandlerFunc(app.myGamesHandler)))
+	router.HandlerFunc(http.MethodGet, "/my_games/:id/review", app.authenticate(http.HandlerFunc(app.reviewGamePage)))
+	router.HandlerFunc(http.MethodPost, "/my_games/:id/review", app.authenticate(http.HandlerFunc(app.createReviewHandler)))
+	router.HandlerFunc(http.MethodGet, "/my_reviews", app.authenticate(http.HandlerFunc(app.myReviewsPageHandler)))
 
 	router.HandlerFunc(http.MethodGet, "/login", app.indexLoginHandler)
 	router.HandlerFunc(http.MethodPost, "/login", app.loginUserHandler)

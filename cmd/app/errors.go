@@ -16,6 +16,12 @@ func (app application) serverErrorResponse(responseWriter http.ResponseWriter, r
 	app.renderTemplate(responseWriter, views.ErrTemplate("Internal Server Error"))
 }
 
+func (app application) invalidResponse(responseWriter http.ResponseWriter, request *http.Request, err error) {
+	app.logError(request, err)
+	responseWriter.WriteHeader(http.StatusUnprocessableEntity)
+	app.renderTemplate(responseWriter, views.ErrTemplate("Invalid email or password"))
+}
+
 func (app application) notFoundResponse(responseWriter http.ResponseWriter, request *http.Request) {
 	responseWriter.WriteHeader(http.StatusNotFound)
 	app.renderTemplate(responseWriter, views.ErrTemplate("Not Found"))

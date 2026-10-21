@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/luism2302/RateLog/internal/data"
@@ -11,7 +12,7 @@ templ SearchGamePage(games []data.Game, user *data.User) {
 	@Base(user) {
 		<section class="flex-1 bg-base-200 px-4 py-12">
 			<div class="mx-auto w-full max-w-2xl">
-				<h1 class="text-3xl font-bold tracking-tight text-center">Search Game</h1>
+				<h1 class="text-3xl font-bold tracking-tight text-center">Search games</h1>
 				<p class="mt-2 text-sm text-base-content/60 text-center">Find a game by its title.</p>
 				<form method="GET" action="/search_game" role="search" class="mt-8">
 					<label for="title" class="sr-only">Game title</label>
@@ -64,4 +65,29 @@ templ GameCard(game data.Game) {
 			</button>
 		</form>
 	</li>
+}
+
+templ MyGamesPage(games []data.Game, user *data.User) {
+	@Base(user) {
+		<section class="flex-1 bg-base-200 px-4 py-12">
+			<div class="mx-auto w-full max-w-6xl">
+				<h1 class="text-3xl font-bold tracking-tight">My Games</h1>
+				<p class="mt-2 text-sm text-base-content/60">Your game library.</p>
+				<ul class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-5">
+					for _, game := range games {
+						<li class="group relative aspect-[2/3] overflow-hidden rounded-box bg-base-300 shadow-xl transition hover:-translate-y-1 hover:shadow-2xl">
+							<img src={ game.BackgroundImage } alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"/>
+							<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-neutral via-neutral/70 to-transparent p-3 pt-12 text-neutral-content">
+								<h2 class="text-sm sm:text-base font-bold tracking-tight leading-snug line-clamp-2">{ game.Name } </h2>
+								<a href={ templ.URL("/my_games/" + strconv.Itoa(game.ID) + "/review") } class="btn btn-primary btn-xs sm:btn-sm mt-2 w-full gap-1 shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-content">
+									<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5 sm:h-4 sm:w-4"><path d="M12 2.5l2.94 5.96 6.56.95-4.75 4.63 1.12 6.54L12 17.5l-5.87 3.08 1.12-6.54L2.5 9.41l6.56-.95L12 2.5z"></path></svg>
+									Rate and Review
+								</a>
+							</div>
+						</li>
+					}
+				</ul>
+			</div>
+		</section>
+	}
 }

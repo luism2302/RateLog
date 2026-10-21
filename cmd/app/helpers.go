@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
+	"github.com/julienschmidt/httprouter"
 	"github.com/luism2302/RateLog/internal/validator"
 	"github.com/luism2302/RateLog/internal/views"
 )
@@ -17,6 +18,15 @@ func (app *application) renderTemplate(responseWriter http.ResponseWriter, templ
 
 func (app *application) readTitleQueryParam(request *http.Request) string {
 	return request.URL.Query().Get("title")
+}
+
+func (app *application) readGameIDParam(request *http.Request) (int, error) {
+	params := httprouter.ParamsFromContext(request.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func (app *application) parseAndValidateLoginForm(request *http.Request, v *validator.Validator) (views.LoginFormValues, error) {
@@ -77,6 +87,23 @@ func (app *application) parseAndValidateAddGameForm(request *http.Request, v *va
 	}
 
 	formValues.Released = parsedDate.Format(time.DateOnly)
+
+	return formValues, nil
+}
+
+func (app *application) parseAndValidateReviewForm(request *http.Request, v *validator.Validator) (views.ReviewFormValues, error) {
+	if err := request.ParseForm(); err != nil {
+		return views.ReviewFormValues{}, err
+	}
+
+	body := request.PostForm.Get("body")
+	rating, err := strconv.Atoi(request.PostForm.Get("rating"))
+	if err != nil {
+		return views.ReviewFormValues{}, err
+	}
+
+	formValues := views.NewReviewFormValues(body, rating)
+	views.ValidateReviewGameForm(formValues, v)
 
 	return formValues, nil
 }
