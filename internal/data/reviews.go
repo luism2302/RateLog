@@ -5,9 +5,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+var ErrDuplicateReview = errors.New("duplicate review")
 
 type Review struct {
 	UserID    int
@@ -44,8 +45,9 @@ func NewReview(userID, gameID int, body string, rating int) Review {
 }
 
 func (m ReviewsModel) Insert(review Review) error {
-	query := `INSERT INTO reviews(user_id, game_id, body, rating) VALUES($1, $2, $3, $4)`
-	args := []any{review.UserID, review.GameID, review.Body, review.Rating}
+	query := `INSERT INTO reviews(user_id, game_id, body, rating) VALUES($1, $2, $3, $4) 
+	ON CONFLICT (user_id, game_id) DO UPDATE SET body = $5, rating = $6, updated_at = NOW() WHERE reviews.user_id = $7 AND reviews.game_id = $8`
+	args := []any{review.UserID, review.GameID, review.Body, review.Rating, review.Body, review.Rating, review.UserID, review.GameID}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -64,13 +66,9 @@ func (m ReviewsModel) GetReviewsForUser(userID int) ([]GameReview, error) {
 
 	rows, err := m.DB.Query(ctx, query, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, pgx.ErrNoRows):
-			return []GameReview{}, ErrRecordNotFound
-		default:
-			return []GameReview{}, err
-		}
+		return []GameReview{}, err
 	}
+	defer rows.Close()
 
 	reviews := []GameReview{}
 	for rows.Next() {

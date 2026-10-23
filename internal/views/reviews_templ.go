@@ -15,7 +15,7 @@ import (
 	"github.com/luism2302/RateLog/internal/validator"
 )
 
-func ReviewPage(user *data.User, game *data.Game, v *validator.Validator) templ.Component {
+func ReviewPage(user *data.User, game *data.Game, values ReviewFormValues, v *validator.Validator) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -52,7 +52,7 @@ func ReviewPage(user *data.User, game *data.Game, v *validator.Validator) templ.
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CreateReviewForm(game, v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CreateReviewForm(game, values, v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -268,7 +268,7 @@ func MyReviewsPage(user *data.User, reviews []data.GameReview) templ.Component {
 	})
 }
 
-func CreateReviewForm(game *data.Game, v *validator.Validator) templ.Component {
+func CreateReviewForm(game *data.Game, values ReviewFormValues, v *validator.Validator) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -302,7 +302,7 @@ func CreateReviewForm(game *data.Game, v *validator.Validator) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" class=\"card w-full max-w-lg overflow-hidden bg-base-100 shadow-xl\"><figure class=\"relative aspect-[2/1] w-full bg-base-300\"><img src=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" novalidate class=\"card w-full max-w-lg overflow-hidden bg-base-100 shadow-xl\"><figure class=\"relative aspect-[2/1] w-full bg-base-300\"><img src=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -371,7 +371,7 @@ func CreateReviewForm(game *data.Game, v *validator.Validator) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = StarScore().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = StarScore(values.Rating).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -407,30 +407,43 @@ func CreateReviewForm(game *data.Game, v *validator.Validator) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "\" class=\"textarea w-full min-h-36 leading-relaxed\"></textarea> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "\" class=\"textarea w-full min-h-36 leading-relaxed\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var21 string
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(values.Body)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/reviews.templ`, Line: 81, Col: 190}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</textarea> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if msg := v.GetError("body"); msg != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<p id=\"body-error\" class=\"text-error text-xs\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<p id=\"body-error\" class=\"text-error text-xs\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var21 string
-			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
+			var templ_7745c5c3_Var22 string
+			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/reviews.templ`, Line: 83, Col: 56}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</div><div class=\"flex flex-col-reverse gap-2 sm:flex-row sm:justify-end\"><a href=\"/my_games\" class=\"btn btn-ghost\">Cancel</a> <button type=\"submit\" class=\"btn btn-primary\">Submit review</button></div></div></form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</div><div class=\"flex flex-col-reverse gap-2 sm:flex-row sm:justify-end\"><a href=\"/my_games\" class=\"btn btn-ghost\">Cancel</a> <button type=\"submit\" class=\"btn btn-primary\">Submit review</button></div></div></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -438,7 +451,7 @@ func CreateReviewForm(game *data.Game, v *validator.Validator) templ.Component {
 	})
 }
 
-func StarScore() templ.Component {
+func StarScore(rating int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -454,12 +467,62 @@ func StarScore() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var22 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var22 == nil {
-			templ_7745c5c3_Var22 = templ.NopComponent
+		templ_7745c5c3_Var23 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var23 == nil {
+			templ_7745c5c3_Var23 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<fieldset class=\"flex flex-col items-center gap-2\"><legend class=\"mb-2 w-full text-center text-sm font-medium\">Your rating</legend><div class=\"rating rating-lg gap-1 rounded-field p-1 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary\"><input type=\"radio\" name=\"rating\" value=\"1\" aria-label=\"1 star\" required class=\"mask mask-star-2 bg-accent\"> <input type=\"radio\" name=\"rating\" value=\"2\" aria-label=\"2 stars\" required class=\"mask mask-star-2 bg-accent\"> <input type=\"radio\" name=\"rating\" value=\"3\" aria-label=\"3 stars\" required class=\"mask mask-star-2 bg-accent\"> <input type=\"radio\" name=\"rating\" value=\"4\" aria-label=\"4 stars\" required class=\"mask mask-star-2 bg-accent\"> <input type=\"radio\" name=\"rating\" value=\"5\" aria-label=\"5 stars\" required class=\"mask mask-star-2 bg-accent\"></div><p class=\"text-xs text-base-content/60\">Choose from 1 to 5 stars.</p></fieldset>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<fieldset class=\"flex flex-col items-center gap-2\"><legend class=\"mb-2 w-full text-center text-sm font-medium\">Your rating</legend><div class=\"rating rating-lg gap-1 rounded-field p-1 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary\"><input type=\"radio\" name=\"rating\" value=\"1\" aria-label=\"1 star\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if rating == 1 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, " checked")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, " required class=\"mask mask-star-2 bg-accent\"> <input type=\"radio\" name=\"rating\" value=\"2\" aria-label=\"2 star\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if rating == 2 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, " checked")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, " required class=\"mask mask-star-2 bg-accent\"> <input type=\"radio\" name=\"rating\" value=\"3\" aria-label=\"3 star\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if rating == 3 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, " checked")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, " required class=\"mask mask-star-2 bg-accent\"> <input type=\"radio\" name=\"rating\" value=\"4\" aria-label=\"4 star\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if rating == 4 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, " checked")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, " required class=\"mask mask-star-2 bg-accent\"> <input type=\"radio\" name=\"rating\" value=\"5\" aria-label=\"5 star\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if rating == 5 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, " checked")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, " required class=\"mask mask-star-2 bg-accent\"></div><p class=\"text-xs text-base-content/60\">Choose from 1 to 5 stars.</p></fieldset>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

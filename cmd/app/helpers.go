@@ -1,10 +1,12 @@
 package main
 
 import (
-	"context"
+	"bytes"
+	"errors"
+	"io"
 	"net/http"
 	"strconv"
-	"time"
+	"strings"
 
 	"github.com/a-h/templ"
 	"github.com/julienschmidt/httprouter"
@@ -12,8 +14,40 @@ import (
 	"github.com/luism2302/RateLog/internal/views"
 )
 
-func (app *application) renderTemplate(responseWriter http.ResponseWriter, template templ.Component) error {
-	return template.Render(context.Background(), responseWriter)
+func (app *application) renderTemplate(responseWriter http.ResponseWriter, request *http.Request, status int, component templ.Component) {
+	var buffer bytes.Buffer
+	if err := component.Render(request.Context(), &buffer); err != nil {
+		app.renderError(responseWriter, request, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		app.logError(request, err)
+		return
+	}
+
+	responseWriter.Header().Set("Content-Type", "text/html; charset=utf-8")
+	responseWriter.WriteHeader(status)
+
+	_, err := io.Copy(responseWriter, &buffer)
+	if err != nil {
+		app.logError(request, err)
+		return
+	}
+}
+
+func (app *application) renderError(responseWriter http.ResponseWriter, request *http.Request, status int, msg string) {
+	var buffer bytes.Buffer
+	if err := views.ErrTemplate(msg).Render(request.Context(), &buffer); err != nil {
+		http.Error(responseWriter, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		app.logError(request, err)
+		return
+	}
+
+	responseWriter.Header().Set("Content-Type", "text/html; charset=utf-8")
+	responseWriter.WriteHeader(status)
+
+	_, err := io.Copy(responseWriter, &buffer)
+	if err != nil {
+		app.logError(request, err)
+		return
+	}
 }
 
 func (app *application) readTitleQueryParam(request *http.Request) string {
@@ -26,6 +60,10 @@ func (app *application) readGameIDParam(request *http.Request) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	if id <= 0 {
+		return 0, errors.New("ID must be greater than zero")
+	}
 	return id, nil
 }
 
@@ -34,7 +72,7 @@ func (app *application) parseAndValidateLoginForm(request *http.Request, v *vali
 		return views.LoginFormValues{}, err
 	}
 
-	email := request.PostForm.Get("email")
+	email := cleanEmail(request.PostForm.Get("email"))
 	password := request.PostForm.Get("password")
 
 	formValues := views.NewLoginFormValues(email, password)
@@ -48,7 +86,7 @@ func (app *application) parseAndValidateSignupForm(request *http.Request, v *val
 		return views.SignupFormValues{}, err
 	}
 
-	email := request.PostForm.Get("email")
+	email := cleanEmail(request.PostForm.Get("email"))
 	name := request.PostForm.Get("name")
 	password := request.PostForm.Get("password")
 	confirmPassword := request.PostForm.Get("confirmPassword")
@@ -59,36 +97,10 @@ func (app *application) parseAndValidateSignupForm(request *http.Request, v *val
 	return formValues, nil
 }
 
-func (app *application) parseAndValidateAddGameForm(request *http.Request, v *validator.Validator) (views.AddGameFormValues, error) {
-	if err := request.ParseForm(); err != nil {
-		return views.AddGameFormValues{}, err
+func (app *application) ValidateGameID(id int, v *validator.Validator) {
+	if id <= 0 {
+		v.AddError("id", "Must be greater than zero")
 	}
-
-	id, err := strconv.Atoi(request.PostForm.Get("id"))
-	if err != nil {
-		return views.AddGameFormValues{}, err
-	}
-
-	name := request.PostForm.Get("name")
-	released := request.PostForm.Get("released")
-	backgroundImage := request.PostForm.Get("backgroundImage")
-
-	added, err := strconv.Atoi(request.PostForm.Get("added"))
-	if err != nil {
-		return views.AddGameFormValues{}, err
-	}
-
-	formValues := views.NewAddGameFormValues(id, added, name, released, backgroundImage)
-	views.ValidateAddGameForm(formValues, v)
-
-	parsedDate, err := time.Parse("2006-01-02 15:04:05 -0700 MST", formValues.Released)
-	if err != nil {
-		return views.AddGameFormValues{}, err
-	}
-
-	formValues.Released = parsedDate.Format(time.DateOnly)
-
-	return formValues, nil
 }
 
 func (app *application) parseAndValidateReviewForm(request *http.Request, v *validator.Validator) (views.ReviewFormValues, error) {
@@ -99,11 +111,16 @@ func (app *application) parseAndValidateReviewForm(request *http.Request, v *val
 	body := request.PostForm.Get("body")
 	rating, err := strconv.Atoi(request.PostForm.Get("rating"))
 	if err != nil {
-		return views.ReviewFormValues{}, err
+		rating = -1
 	}
 
 	formValues := views.NewReviewFormValues(body, rating)
 	views.ValidateReviewGameForm(formValues, v)
 
 	return formValues, nil
+}
+
+func cleanEmail(email string) string {
+	trimmed := strings.TrimSpace(email)
+	return strings.ToLower(trimmed)
 }

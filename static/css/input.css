@@ -62,8 +62,8 @@
   --color-base-300: oklch(27.9% 0.041 260.031);    /* #1e293b  slate-800 */
   --color-base-content: oklch(96.8% 0.007 247.896);/* #f1f5f9  slate-100 */
 
-  --color-primary: oklch(58.5% 0.233 277.117);     /* #6366f1  indigo-500 */
-  --color-primary-content: oklch(100% 0 0);
+  --color-primary: oklch(67.3% 0.182 276.935);     /* #818cf8  indigo-400 (~6:1 sobre slate-900) */
+  --color-primary-content: oklch(20.8% 0.042 265.755); /* #0f172a slate-900 (~6:1 sobre indigo-400) */
   --color-secondary: oklch(70.2% 0.183 293.541);   /* #a78bfa  violet-400 */
   --color-secondary-content: oklch(20.8% 0.042 265.755);
   --color-accent: oklch(82.8% 0.189 84.429);       /* #fbbf24  amber-400 */

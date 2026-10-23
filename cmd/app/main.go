@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -13,13 +14,15 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/luism2302/RateLog/internal/client"
 	"github.com/luism2302/RateLog/internal/data"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type application struct {
-	logger *slog.Logger
-	cfg    config
-	client *client.Client
-	models data.Models
+	logger    *slog.Logger
+	cfg       config
+	client    *client.Client
+	models    data.Models
+	dummyHash []byte
 }
 type config struct {
 	addr int
@@ -34,6 +37,12 @@ type config struct {
 func main() {
 	var cfg config
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	dummyHash, err := bcrypt.GenerateFromPassword([]byte(rand.Text()), 12)
+	if err != nil {
+		logger.Error("couldn't generate hash")
+		os.Exit(1)
+	}
 
 	if err := godotenv.Load(); err != nil {
 		logger.Error("couldn't load .env")
@@ -62,10 +71,11 @@ func main() {
 	}
 
 	app := &application{
-		logger: logger,
-		cfg:    cfg,
-		client: client.New(apiKey),
-		models: data.NewModels(pool),
+		logger:    logger,
+		cfg:       cfg,
+		client:    client.New(apiKey),
+		models:    data.NewModels(pool),
+		dummyHash: dummyHash,
 	}
 
 	srv := http.Server{

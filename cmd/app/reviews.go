@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/luism2302/RateLog/internal/data"
@@ -27,7 +28,7 @@ func (app *application) reviewGamePage(responseWriter http.ResponseWriter, reque
 		return
 	}
 	v := validator.New()
-	app.renderTemplate(responseWriter, views.ReviewPage(user, &game, v))
+	app.renderTemplate(responseWriter, request, http.StatusOK, views.ReviewPage(user, &game, views.ReviewFormValues{}, v))
 }
 
 func (app *application) createReviewHandler(responseWriter http.ResponseWriter, request *http.Request) {
@@ -39,21 +40,31 @@ func (app *application) createReviewHandler(responseWriter http.ResponseWriter, 
 
 	gameID, err := app.readGameIDParam(request)
 	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
+		app.notFoundResponse(responseWriter, request)
 		return
 	}
 
 	game, err := app.models.Games.GetGameByID(gameID)
 	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
-		return
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(responseWriter, request)
+			return
+		default:
+			app.serverErrorResponse(responseWriter, request, err)
+			return
+		}
 	}
 
 	v := validator.New()
 	formValues, err := app.parseAndValidateReviewForm(request, v)
+	if err != nil {
+		app.serverErrorResponse(responseWriter, request, err)
+		return
+	}
 
 	if !v.Valid() {
-		app.renderTemplate(responseWriter, views.ReviewPage(user, &game, v))
+		app.renderTemplate(responseWriter, request, http.StatusUnprocessableEntity, views.ReviewPage(user, &game, formValues, v))
 		return
 	}
 
@@ -75,9 +86,15 @@ func (app *application) myReviewsPageHandler(responseWriter http.ResponseWriter,
 
 	reviews, err := app.models.Reviews.GetReviewsForUser(user.ID)
 	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
-		return
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(responseWriter, request)
+			return
+		default:
+			app.serverErrorResponse(responseWriter, request, err)
+			return
+		}
 	}
 
-	app.renderTemplate(responseWriter, views.MyReviewsPage(user, reviews))
+	app.renderTemplate(responseWriter, request, http.StatusOK, views.MyReviewsPage(user, reviews))
 }

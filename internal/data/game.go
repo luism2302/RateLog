@@ -49,20 +49,16 @@ func (m GameModel) Insert(game Game) error {
 func (m GameModel) GetGamesForUser(userID int) ([]Game, error) {
 	query := `SELECT games.id, games.title, games.release_date, games.background_image_link
 	FROM games 
-	JOIN users_games ON games.id = users_games.game_id AND users_games.user_id = $1 ORDER BY games.title`
+	JOIN users_games ON games.id = users_games.game_id AND users_games.user_id = $1 ORDER BY users_games.created_at DESC`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	rows, err := m.DB.Query(ctx, query, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, pgx.ErrNoRows):
-			return []Game{}, ErrRecordNotFound
-		default:
-			return []Game{}, err
-		}
+		return []Game{}, err
 	}
+	defer rows.Close()
 
 	games := []Game{}
 	for rows.Next() {
@@ -70,11 +66,11 @@ func (m GameModel) GetGamesForUser(userID int) ([]Game, error) {
 		if err := rows.Scan(&game.ID, &game.Name, &game.Released, &game.BackgroundImage); err != nil {
 			return []Game{}, err
 		}
-
 		games = append(games, game)
 	}
-	if err := rows.Err(); err != nil {
-		return []Game{}, err
+
+	if rows.Err() != nil {
+		return []Game{}, rows.Err()
 	}
 
 	return games, nil

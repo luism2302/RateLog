@@ -8,15 +8,12 @@ import (
 	"github.com/luism2302/RateLog/internal/data"
 	"github.com/luism2302/RateLog/internal/validator"
 	"github.com/luism2302/RateLog/internal/views"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (app *application) indexLoginHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	v := validator.New()
-	err := app.renderTemplate(responseWriter, views.LoginPage(views.LoginFormValues{}, v))
-	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
-		return
-	}
+	app.renderTemplate(responseWriter, request, http.StatusOK, views.LoginPage(views.LoginFormValues{}, v))
 }
 
 func (app *application) loginUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
@@ -28,7 +25,7 @@ func (app *application) loginUserHandler(responseWriter http.ResponseWriter, req
 	}
 
 	if !v.Valid() {
-		app.renderTemplate(responseWriter, views.LoginPage(formValues, v))
+		app.renderTemplate(responseWriter, request, http.StatusUnprocessableEntity, views.LoginPage(formValues, v))
 		return
 	}
 
@@ -37,8 +34,9 @@ func (app *application) loginUserHandler(responseWriter http.ResponseWriter, req
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			user.Password.Matches(formValues.Password)
-			app.invalidResponse(responseWriter, request, err)
+			bcrypt.CompareHashAndPassword(app.dummyHash, []byte("dummy"))
+			v.AddError("email", "Invalid email or password")
+			app.renderTemplate(responseWriter, request, http.StatusUnprocessableEntity, views.LoginPage(formValues, v))
 			return
 		default:
 			app.serverErrorResponse(responseWriter, request, err)
@@ -53,8 +51,8 @@ func (app *application) loginUserHandler(responseWriter http.ResponseWriter, req
 	}
 
 	if !matches {
-		v.AddError("password", "Incorrect Password")
-		app.renderTemplate(responseWriter, views.LoginPage(formValues, v))
+		v.AddError("email", "Invalid email or password")
+		app.renderTemplate(responseWriter, request, http.StatusUnprocessableEntity, views.LoginPage(formValues, v))
 		return
 	}
 
@@ -72,11 +70,7 @@ func (app *application) loginUserHandler(responseWriter http.ResponseWriter, req
 
 func (app *application) indexSignUpHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	v := validator.New()
-	err := app.renderTemplate(responseWriter, views.SignupPage(views.SignupFormValues{}, v))
-	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
-		return
-	}
+	app.renderTemplate(responseWriter, request, http.StatusOK, views.SignupPage(views.SignupFormValues{}, v))
 }
 
 func (app *application) createUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
@@ -88,7 +82,7 @@ func (app *application) createUserHandler(responseWriter http.ResponseWriter, re
 	}
 
 	if !v.Valid() {
-		app.renderTemplate(responseWriter, views.SignupPage(formValues, v))
+		app.renderTemplate(responseWriter, request, http.StatusUnprocessableEntity, views.SignupPage(formValues, v))
 		return
 	}
 
@@ -107,7 +101,7 @@ func (app *application) createUserHandler(responseWriter http.ResponseWriter, re
 		switch {
 		case errors.Is(err, data.ErrDuplicateEmail):
 			v.AddError("email", "Email already in use")
-			app.renderTemplate(responseWriter, views.SignupPage(formValues, v))
+			app.renderTemplate(responseWriter, request, http.StatusUnprocessableEntity, views.SignupPage(formValues, v))
 			return
 		default:
 			app.serverErrorResponse(responseWriter, request, err)
@@ -115,24 +109,24 @@ func (app *application) createUserHandler(responseWriter http.ResponseWriter, re
 		}
 	}
 	http.Redirect(responseWriter, request, "/login", http.StatusSeeOther)
-	return
 }
 
 func (app *application) logoutUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	authCookie, err := request.Cookie(authCookieName)
 	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
+		http.Redirect(responseWriter, request, "/login", http.StatusSeeOther)
 		return
 	}
 
 	token := authCookie.Value
-	removeAuthCookie(responseWriter)
 
 	err = app.models.Tokens.Delete(token)
 	if err != nil {
 		app.serverErrorResponse(responseWriter, request, err)
 		return
 	}
+
+	removeAuthCookie(responseWriter)
+
 	http.Redirect(responseWriter, request, "/login", http.StatusSeeOther)
-	return
 }

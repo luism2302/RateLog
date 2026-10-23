@@ -50,7 +50,8 @@ los tokens semánticos del tema para que todo funcione en claro y oscuro.
 
 | Token | Claro | Oscuro | Uso |
 |---|---|---|---|
-| `primary` | indigo-600 `#4f46e5` | indigo-500 `#6366f1` | botones principales, links, marca |
+| `primary` | indigo-600 `#4f46e5` | indigo-400 `#818cf8` | botones principales, links, marca |
+| `primary-content` | white | slate-900 `#0f172a` | texto/iconos sobre `bg-primary` / `btn-primary` |
 | `secondary` | violet-500 `#8b5cf6` | violet-400 `#a78bfa` | acentos secundarios, badges |
 | `accent` | amber-400 `#fbbf24` | amber-400 | estrellas / calificaciones, hover en footer |
 | `neutral` | slate-900 `#0f172a` | slate-950 `#020617` | footer, superficies oscuras |

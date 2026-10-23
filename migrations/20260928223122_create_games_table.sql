@@ -1,8 +1,8 @@
 -- +goose Up
 CREATE TABLE IF NOT EXISTS games(
      id BIGINT PRIMARY KEY,
-     title TEXT NOT NULL UNIQUE,
-     release_date TIMESTAMP(0) WITH TIME ZONE NOT NULL,
+     title TEXT NOT NULL,
+     release_date DATE,
      background_image_link TEXT NOT NULL,
      created_at TIMESTAMP (0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
      updated_at TIMESTAMP (0) WITH TIME ZONE NOT NULL DEFAULT NOW()

@@ -13,9 +13,10 @@ const (
 
 func setAuthCookie(responseWriter http.ResponseWriter, token data.Token) {
 	cookie := http.Cookie{
+		Path:     "/",
 		Name:     authCookieName,
 		Value:    token.Plaintext,
-		Expires:  time.Now().Add(24 * time.Hour),
+		Expires:  token.Expires,
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
@@ -25,6 +26,7 @@ func setAuthCookie(responseWriter http.ResponseWriter, token data.Token) {
 
 func removeAuthCookie(responseWriter http.ResponseWriter) {
 	cookie := http.Cookie{
+		Path:     "/",
 		Name:     authCookieName,
 		Value:    "",
 		Expires:  time.Now().Add(-time.Hour),
