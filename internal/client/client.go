@@ -18,7 +18,6 @@ import (
 
 var (
 	ErrNotFound    = errors.New("Not Found")
-	ErrRateLimited = errors.New("Rate limited")
 	ErrUnavailable = errors.New("Unavailable")
 )
 
@@ -28,9 +27,11 @@ var baseURL = url.URL{
 }
 
 type Client struct {
-	apiKey string
-	client *http.Client
-	cache  cache
+	apiKey       string
+	client       *http.Client
+	cache        cache
+	userLimits   *userLimiter
+	globalLimits *globalLimiter
 }
 
 func New(apiKey string) *Client {
@@ -41,52 +42,37 @@ func New(apiKey string) *Client {
 		},
 	}
 	return &Client{
-		apiKey: apiKey,
-		client: httpClient,
-		cache:  newCache(),
+		apiKey:       apiKey,
+		client:       httpClient,
+		cache:        newCache(),
+		userLimits:   newUserLimiter(),
+		globalLimits: newGlobalLimiter(),
 	}
+}
+
+type params struct {
+	calledFrom string
+	id         int
+	title      string
 }
 
 func (c *Client) SearchGameByID(quotaKey, id int, ctx context.Context) (data.Game, error) {
 	if quotaKey <= 0 {
 		return data.Game{}, errors.New("invalid user id for api call")
 	}
-
 	if game, ok := c.cache.idCache.get(id); ok {
 		return game, nil
 	}
 	if c.cache.idCache.getMissing(id) {
 		return data.Game{}, ErrNotFound
 	}
-	reqURL := baseURL
-	reqURL.Path = fmt.Sprintf("/api/games/%d", id)
 
-	urlValues := url.Values{}
-	urlValues.Set("key", c.apiKey)
-	reqURL.RawQuery = urlValues.Encode()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL.String(), nil)
+	response, err := c.makeAPIRequest(quotaKey, ctx, params{calledFrom: "id", id: id})
 	if err != nil {
-		return data.Game{}, fmt.Errorf("rawg: request failed: %w", ErrUnavailable)
-	}
-
-	response, err := c.client.Do(req)
-	if err != nil {
-		return data.Game{}, fmt.Errorf("rawg: request failed: %w", ErrUnavailable)
+		return data.Game{}, err
 	}
 
 	defer response.Body.Close()
-
-	err = classifyStatusCode(response.StatusCode)
-	if err != nil {
-		switch {
-		case errors.Is(err, ErrNotFound):
-			c.cache.idCache.markMissing(id)
-			return data.Game{}, err
-		default:
-			return data.Game{}, err
-		}
-	}
 
 	var output struct {
 		ID              int    `json:"id"`
@@ -124,42 +110,17 @@ func (c *Client) SearchGameByTitle(quotaKey int, title string, ctx context.Conte
 	if quotaKey <= 0 {
 		return nil, errors.New("invalid user id for api call")
 	}
-	reqURL := baseURL
-	reqURL.Path = "/api/games"
-
-	urlValues := url.Values{}
-	urlValues.Set("key", c.apiKey)
-	urlValues.Set("search", title)
-	urlValues.Set("page_size", "40")
-	reqURL.RawQuery = urlValues.Encode()
-
 	normalizedTitle := strings.ToLower(strings.TrimSpace(title))
-
 	if games, ok := c.cache.titleCache.get(normalizedTitle); ok {
 		return games, nil
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("rawg: request failed: %w", ErrUnavailable)
-	}
 
-	response, err := c.client.Do(req)
+	response, err := c.makeAPIRequest(quotaKey, ctx, params{calledFrom: "title", title: title})
 	if err != nil {
-		return nil, fmt.Errorf("rawg: request failed: %w", ErrUnavailable)
+		return nil, err
 	}
 
 	defer response.Body.Close()
-
-	err = classifyStatusCode(response.StatusCode)
-	if err != nil {
-		switch {
-		case errors.Is(err, ErrNotFound):
-			return nil, fmt.Errorf("rawg 404: %w", ErrUnavailable)
-		default:
-			return nil, err
-
-		}
-	}
 
 	var output struct {
 		Results []struct {
@@ -242,4 +203,68 @@ func classifyStatusCode(status int) error {
 	default:
 		return fmt.Errorf("rawg status: %d. err: %w", status, ErrUnavailable)
 	}
+}
+
+func (c *Client) makeAPIRequest(quotaKey int, ctx context.Context, values params) (*http.Response, error) {
+	reqURL := baseURL
+	urlValues := url.Values{}
+	urlValues.Set("key", c.apiKey)
+
+	switch values.calledFrom {
+	case "id":
+		reqURL.Path = fmt.Sprintf("/api/games/%d", values.id)
+	case "title":
+		reqURL.Path = "/api/games"
+		urlValues.Set("search", values.title)
+		urlValues.Set("page_size", "40")
+	default:
+		return nil, errors.New("unknown request")
+
+	}
+
+	if !c.userLimits.allow(quotaKey) {
+		return nil, ErrRateLimited
+	}
+
+	now := time.Now()
+	if !c.globalLimits.allow(now) {
+		return nil, fmt.Errorf("rawg: global limit or pause: %w", ErrUnavailable)
+	}
+
+	reqURL.RawQuery = urlValues.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("rawg: request failed: %w", ErrUnavailable)
+	}
+
+	response, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("rawg: request failed: %w", ErrUnavailable)
+	}
+
+	if response.StatusCode == http.StatusTooManyRequests {
+		retryAfter := response.Header.Get("Retry-After")
+		c.globalLimits.pauseFor(now, c.globalLimits.retryAfter(retryAfter, now))
+	}
+
+	err = classifyStatusCode(response.StatusCode)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
+			response.Body.Close()
+			if values.calledFrom == "id" {
+				c.cache.idCache.markMissing(values.id)
+				return nil, ErrNotFound
+			} else if values.calledFrom == "title" {
+				return nil, fmt.Errorf("rawg search: status 404: %w", ErrUnavailable)
+			}
+			return nil, err
+		default:
+			response.Body.Close()
+			return nil, err
+		}
+	}
+
+	return response, nil
 }
