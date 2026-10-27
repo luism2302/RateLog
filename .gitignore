@@ -4,3 +4,6 @@ node_modules/
 !.env.example
 tmp/
 .claude/settings.local.json
+CLAUDE.md
+.claude/
+docs/
