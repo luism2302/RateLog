@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/luism2302/RateLog/internal/client"
 	"github.com/luism2302/RateLog/internal/data"
 	"github.com/luism2302/RateLog/internal/validator"
 	"github.com/luism2302/RateLog/internal/views"
@@ -35,8 +36,17 @@ func (app *application) searchGamesHandler(responseWriter http.ResponseWriter, r
 
 	games, err := app.client.SearchGameByTitle(user.ID, title, request.Context())
 	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
-		return
+		switch {
+		case errors.Is(err, client.ErrRateLimited):
+			app.rateLimitExceededResponse(responseWriter, request)
+			return
+		case errors.Is(err, client.ErrUnavailable):
+			app.serviceUnavailable(responseWriter, request)
+			return
+		default:
+			app.serverErrorResponse(responseWriter, request, err)
+			return
+		}
 	}
 
 	app.renderTemplate(responseWriter, request, http.StatusOK, views.SearchGamePage(games, user, v))
@@ -61,8 +71,17 @@ func (app *application) addGameHandler(responseWriter http.ResponseWriter, reque
 		case errors.Is(err, data.ErrRecordNotFound):
 			game, err = app.client.SearchGameByID(user.ID, gameID, request.Context())
 			if err != nil {
-				app.notFoundResponse(responseWriter, request)
-				return
+				switch {
+				case errors.Is(err, client.ErrNotFound):
+					app.notFoundResponse(responseWriter, request)
+					return
+				case errors.Is(err, client.ErrUnavailable) || errors.Is(err, client.ErrRateLimited):
+					app.serviceUnavailable(responseWriter, request)
+					return
+				default:
+					app.serverErrorResponse(responseWriter, request, err)
+					return
+				}
 			}
 			if err := app.models.Games.Insert(game); err != nil {
 				app.serverErrorResponse(responseWriter, request, err)

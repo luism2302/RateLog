@@ -208,31 +208,34 @@ func classifyStatusCode(status int) error {
 func (c *Client) makeAPIRequest(quotaKey int, ctx context.Context, values params) (*http.Response, error) {
 	reqURL := baseURL
 	urlValues := url.Values{}
-	urlValues.Set("key", c.apiKey)
 
 	switch values.calledFrom {
 	case "id":
 		reqURL.Path = fmt.Sprintf("/api/games/%d", values.id)
+		urlValues.Set("key", c.apiKey)
 	case "title":
 		reqURL.Path = "/api/games"
 		urlValues.Set("search", values.title)
 		urlValues.Set("page_size", "40")
+		urlValues.Set("key", c.apiKey)
 	default:
 		return nil, errors.New("unknown request")
 
 	}
 
-	if !c.userLimits.allow(quotaKey) {
+	now := time.Now()
+
+	reservation, ok := c.userLimits.reserve(quotaKey, now)
+	if !ok {
 		return nil, ErrRateLimited
 	}
 
-	now := time.Now()
 	if !c.globalLimits.allow(now) {
+		reservation.CancelAt(now)
 		return nil, fmt.Errorf("rawg: global limit or pause: %w", ErrUnavailable)
 	}
 
 	reqURL.RawQuery = urlValues.Encode()
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("rawg: request failed: %w", ErrUnavailable)

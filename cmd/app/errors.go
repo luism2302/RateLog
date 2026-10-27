@@ -18,9 +18,17 @@ func (app *application) notFoundResponse(responseWriter http.ResponseWriter, req
 }
 
 func (app *application) rateLimitExceededResponse(responseWriter http.ResponseWriter, request *http.Request) {
-	app.renderError(responseWriter, request, http.StatusTooManyRequests, http.StatusText(http.StatusTooManyRequests))
+	app.renderError(responseWriter, request, http.StatusTooManyRequests, "You're making requests too fast. Wait a few minutes and try again")
 }
 
 func (app *application) unprocessableEntityResponse(responseWriter http.ResponseWriter, request *http.Request) {
 	app.renderError(responseWriter, request, http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity))
+}
+
+func (app *application) serviceUnavailable(responseWriter http.ResponseWriter, request *http.Request) {
+	app.renderError(responseWriter, request, http.StatusServiceUnavailable, "Service is temporarily unavailable. Wait a few minutes and try again")
+}
+
+func (app *application) badRequest(responseWriter http.ResponseWriter, request *http.Request) {
+	app.renderError(responseWriter, request, http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 }

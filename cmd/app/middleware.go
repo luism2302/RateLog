@@ -80,7 +80,7 @@ func (app *application) rateLimit(next http.Handler) http.HandlerFunc {
 	}()
 
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
-		if strings.HasPrefix(request.URL.Path, "/static/") {
+		if strings.HasPrefix(request.URL.Path, "/static/") || request.URL.Path == "/healthz" {
 			next.ServeHTTP(responseWriter, request)
 			return
 		}
@@ -120,9 +120,32 @@ func (app *application) rateLimit(next http.Handler) http.HandlerFunc {
 	})
 }
 
+func (app *application) recoverPanic(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+		defer func() {
+			panicValue := recover()
+
+			if panicValue != nil {
+				responseWriter.Header().Set("Connection", "close")
+				app.serverErrorResponse(responseWriter, request, fmt.Errorf("%v", panicValue))
+			}
+		}()
+		next.ServeHTTP(responseWriter, request)
+	})
+}
+
 func (app *application) commonHeaders(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
-		responseWriter.Header().Add("X-Content-Type-Options", "nosniff")
+		responseWriter.Header().Set("X-Content-Type-Options", "nosniff")
+		responseWriter.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' https://media.rawg.io data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'")
+		responseWriter.Header().Set("X-Frame-Options", "DENY")
+		responseWriter.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		responseWriter.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()")
+		responseWriter.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
+		if app.cfg.env == "prod" {
+			responseWriter.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+		}
+
 		next.ServeHTTP(responseWriter, request)
 	})
 }

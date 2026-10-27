@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/luism2302/RateLog/static"
 )
 
 func (app *application) routes() http.Handler {
@@ -11,7 +12,7 @@ func (app *application) routes() http.Handler {
 
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
 
-	router.ServeFiles("/static/*filepath", http.Dir("./static"))
+	router.ServeFiles("/static/*filepath", http.FS(static.Css))
 
 	router.Handler(http.MethodGet, "/", http.RedirectHandler("/search_game", http.StatusSeeOther))
 	router.HandlerFunc(http.MethodGet, "/search_game", app.authenticate(http.HandlerFunc(app.searchGamesHandler)))
@@ -22,6 +23,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/my_games/:id/review", app.authenticate(http.HandlerFunc(app.createReviewHandler)))
 	router.HandlerFunc(http.MethodGet, "/my_reviews", app.authenticate(http.HandlerFunc(app.myReviewsPageHandler)))
 
+	router.HandlerFunc(http.MethodGet, "/healthz", app.healthzHandler)
 	router.HandlerFunc(http.MethodGet, "/login", app.indexLoginHandler)
 	router.HandlerFunc(http.MethodPost, "/login", app.loginUserHandler)
 	router.HandlerFunc(http.MethodGet, "/signup", app.indexSignUpHandler)
@@ -30,5 +32,5 @@ func (app *application) routes() http.Handler {
 
 	antiCSRF := http.NewCrossOriginProtection()
 
-	return antiCSRF.Handler(app.rateLimit(app.commonHeaders(router)))
+	return app.recoverPanic(app.commonHeaders(antiCSRF.Handler(app.rateLimit(router))))
 }

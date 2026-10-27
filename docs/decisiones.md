@@ -95,6 +95,14 @@ aquí van las decisiones que se toman encima de esas bases mientras se construye
   el `<form>` lleva `aria-describedby="form-error"` cuando existe. En la lógica es una clave propia (`"form"`).
   *Por qué:* un error de credenciales bajo Email hace creer que el email está mal.
   *Dónde:* login y cualquier formulario con errores generales.
+  *Posición (2026-10-27):* en cualquier formulario dentro de una card va en el mismo sitio que los avisos flash:
+  dentro del `card-body`, tras el bloque de título (y cabecera de juego si la hay) y antes del primer campo. Si
+  coinciden un aviso flash y un error de formulario, el error va primero.
+- **Iconos de los avisos** (2026-10-27). Un icono de trazo por tipo de `alert` (heroicons, `stroke-width="2"`,
+  `h-5 w-5 shrink-0`, `aria-hidden`, color heredado con `currentColor`): `error` = exclamation-circle,
+  `success` = check-circle, `info` = information-circle, `warning` = exclamation-triangle.
+  *Por qué:* el mismo icono en todos los `#form-error` y avisos evita que cada página invente el suyo.
+  *Dónde:* todo `#form-error` (reviews, login, signup) y los avisos flash.
 - **Avisos flash** (2026-10-21). Tras una redirección, aviso dentro de `card-body`, justo después del bloque
   `h1` + subtítulo y antes del primer campo, a todo el ancho: `<div class="alert alert-soft alert-<tipo> text-sm">`
   con icono `aria-hidden` y el texto en un `<span>`. Sin `role` (igual que "Anuncio de errores"), no desaparece solo

@@ -18,17 +18,49 @@ func (app *application) reviewGamePage(responseWriter http.ResponseWriter, reque
 
 	gameID, err := app.readGameIDParam(request)
 	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
+		app.notFoundResponse(responseWriter, request)
 		return
 	}
 
 	game, err := app.models.Games.GetGameByID(gameID)
 	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
-		return
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(responseWriter, request)
+			return
+		default:
+			app.serverErrorResponse(responseWriter, request, err)
+			return
+		}
 	}
+	if err := app.models.UserGames.HasGame(user.ID, gameID); err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(responseWriter, request)
+			return
+		default:
+			app.serverErrorResponse(responseWriter, request, err)
+			return
+		}
+	}
+
 	v := validator.New()
-	app.renderTemplate(responseWriter, request, http.StatusOK, views.ReviewPage(user, &game, views.ReviewFormValues{}, v))
+
+	review, err := app.models.Reviews.Get(user.ID, gameID)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.renderTemplate(responseWriter, request, http.StatusOK, views.ReviewPage(user, &game, views.ReviewFormValues{}, false, v))
+			return
+
+		default:
+			app.serverErrorResponse(responseWriter, request, err)
+			return
+		}
+	}
+
+	formValues := views.ReviewFormValues{Body: review.Body, Rating: review.Rating}
+	app.renderTemplate(responseWriter, request, http.StatusOK, views.ReviewPage(user, &game, formValues, true, v))
 }
 
 func (app *application) createReviewHandler(responseWriter http.ResponseWriter, request *http.Request) {
@@ -56,22 +88,62 @@ func (app *application) createReviewHandler(responseWriter http.ResponseWriter, 
 		}
 	}
 
+	if err := app.models.UserGames.HasGame(user.ID, gameID); err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(responseWriter, request)
+			return
+		default:
+			app.serverErrorResponse(responseWriter, request, err)
+			return
+		}
+	}
+
 	v := validator.New()
-	formValues, err := app.parseAndValidateReviewForm(request, v)
+
+	review, err := app.models.Reviews.Get(user.ID, gameID)
+	isEdit := true
+
 	if err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
-		return
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			isEdit = false
+
+		default:
+			app.serverErrorResponse(responseWriter, request, err)
+			return
+		}
+	}
+
+	formValues, err := app.parseAndValidateReviewForm(responseWriter, request, v)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrBodyTooLarge):
+			app.renderTemplate(responseWriter, request, http.StatusUnprocessableEntity, views.ReviewPage(user, &game, views.ReviewFormValues{Body: review.Body, Rating: review.Rating}, isEdit, v))
+			return
+		default:
+			app.badRequest(responseWriter, request)
+			return
+		}
 	}
 
 	if !v.Valid() {
-		app.renderTemplate(responseWriter, request, http.StatusUnprocessableEntity, views.ReviewPage(user, &game, formValues, v))
+		app.renderTemplate(responseWriter, request, http.StatusUnprocessableEntity, views.ReviewPage(user, &game, formValues, isEdit, v))
 		return
 	}
 
-	review := data.NewReview(user.ID, gameID, formValues.Body, formValues.Rating)
+	review = data.NewReview(user.ID, gameID, formValues.Body, formValues.Rating)
 	if err := app.models.Reviews.Insert(review); err != nil {
-		app.serverErrorResponse(responseWriter, request, err)
-		return
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(responseWriter, request)
+			return
+		default:
+			app.logError(request, err)
+			v.AddError("form", "We couldn't save your review, please try again")
+			app.renderTemplate(responseWriter, request, http.StatusInternalServerError, views.ReviewPage(user, &game, formValues, isEdit, v))
+			return
+		}
 	}
 
 	http.Redirect(responseWriter, request, "/my_reviews", http.StatusSeeOther)

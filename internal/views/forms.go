@@ -1,6 +1,8 @@
 package views
 
 import (
+	"unicode/utf8"
+
 	"github.com/luism2302/RateLog/internal/validator"
 )
 
@@ -55,6 +57,7 @@ func NewReviewFormValues(body string, rating int) ReviewFormValues {
 
 func ValidateReviewGameForm(values ReviewFormValues, v *validator.Validator) {
 	v.Check(values.Body != "", "body", "Cannot be blank")
-	v.Check(values.Rating >= 1, "rating", "Cannot be lower than 0")
-	v.Check(values.Rating <= 5, "rating", "Cannot be greater than 5")
+	v.Check(utf8.RuneCountInString(values.Body) <= 2000, "body", "Cannot be greater than 2000 characters")
+	v.Check(values.Rating >= 1, "rating", "Choose a rating")
+	v.Check(values.Rating <= 5, "rating", "Choose a rating")
 }

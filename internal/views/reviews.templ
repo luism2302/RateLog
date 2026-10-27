@@ -7,10 +7,10 @@ import (
 	"github.com/luism2302/RateLog/internal/validator"
 )
 
-templ ReviewPage(user *data.User, game *data.Game, values ReviewFormValues, v *validator.Validator) {
+templ ReviewPage(user *data.User, game *data.Game, values ReviewFormValues, isEdit bool, v *validator.Validator) {
 	@Base(user) {
 		<div class="flex-1 flex items-center justify-center bg-base-200 px-4 py-12">
-			@CreateReviewForm(game, values, v)
+			@CreateReviewForm(game, values, isEdit, v)
 		</div>
 	}
 }
@@ -56,7 +56,10 @@ templ MyReviewsPage(user *data.User, reviews []data.GameReview) {
 	}
 }
 
-templ CreateReviewForm(game *data.Game, values ReviewFormValues, v *validator.Validator) {
+templ CreateReviewForm(game *data.Game, values ReviewFormValues, isEdit bool, v *validator.Validator) {
+	if msg := v.GetError("form"); msg != "" {
+		<p id="form-error" class="text-error text-xs text-center">{ msg }</p>
+	}
 	<form method="POST" action={ templ.URL("/my_games/" + strconv.Itoa(game.ID) + "/review") } novalidate class="card w-full max-w-lg overflow-hidden bg-base-100 shadow-xl">
 		<figure class="relative aspect-[2/1] w-full bg-base-300">
 			<img src={ game.BackgroundImage } alt={ "Cover art for " + game.Name } class="absolute inset-0 h-full w-full object-cover object-center"/>
@@ -64,7 +67,11 @@ templ CreateReviewForm(game *data.Game, values ReviewFormValues, v *validator.Va
 		</figure>
 		<div class="card-body gap-6">
 			<div class="text-center">
-				<p class="text-xs font-semibold uppercase tracking-wider text-primary">Rate and review</p>
+				if isEdit {
+					<p class="text-xs font-semibold uppercase tracking-wider text-primary">Edit your review</p>
+				} else {
+					<p class="text-xs font-semibold uppercase tracking-wider text-primary">Rate and review</p>
+				}
 				<h1 class="mt-1 text-2xl font-bold tracking-tight text-balance">{ game.Name }</h1>
 				<p class="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-base-content/60">
 					<span>Released <time datetime={ game.Released.Format("2006-01-02") }>{ game.Released.Format("2006") }</time></span>
@@ -85,7 +92,11 @@ templ CreateReviewForm(game *data.Game, values ReviewFormValues, v *validator.Va
 			</div>
 			<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 				<a href="/my_games" class="btn btn-ghost">Cancel</a>
-				<button type="submit" class="btn btn-primary">Submit review</button>
+				if isEdit {
+					<button type="submit" class="btn btn-primary">Save changes</button>
+				} else {
+					<button type="submit" class="btn btn-primary">Submit review</button>
+				}
 			</div>
 		</div>
 	</form>

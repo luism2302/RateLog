@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -53,7 +55,13 @@ func (m ReviewsModel) Insert(review Review) error {
 	defer cancel()
 
 	if _, err := m.DB.Exec(ctx, query, args...); err != nil {
-		return err
+		var pgErr *pgconn.PgError
+		switch {
+		case errors.As(err, &pgErr) && pgErr.Code == "23503":
+			return ErrRecordNotFound
+		default:
+			return err
+		}
 	}
 
 	return nil
@@ -85,4 +93,25 @@ func (m ReviewsModel) GetReviewsForUser(userID int) ([]GameReview, error) {
 	}
 
 	return reviews, err
+}
+
+func (m ReviewsModel) Get(userID, gameID int) (Review, error) {
+	query := `SELECT user_id, game_id, body, rating, created_at, updated_at FROM reviews WHERE user_id = $1 AND game_id =  $2`
+	args := []any{userID, gameID}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var review Review
+	err := m.DB.QueryRow(ctx, query, args...).Scan(&review.UserID, &review.GameID, &review.Body, &review.Rating, &review.CreatedAt, &review.UpdatedAt)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			return Review{}, ErrRecordNotFound
+		default:
+			return Review{}, err
+		}
+	}
+
+	return review, nil
 }

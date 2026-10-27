@@ -59,14 +59,14 @@ func newUserLimiter() *userLimiter {
 
 func newGlobalLimiter() *globalLimiter {
 	daily := rate.NewLimiter(rate.Every(dailyRate), dailyBurst)
-	daily.AllowN(time.Now(), dailyBurst)
+	daily.AllowN(time.Now(), dailyBurst-20)
 	return &globalLimiter{
 		burst: rate.NewLimiter(rate.Every(globalRate), globalBurst),
 		daily: daily,
 	}
 }
 
-func (u *userLimiter) allow(quotaKey int) bool {
+func (u *userLimiter) reserve(quotaKey int, now time.Time) (*rate.Reservation, bool) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
@@ -78,7 +78,13 @@ func (u *userLimiter) allow(quotaKey int) bool {
 		user = newUser
 	}
 	u.users[quotaKey].lastSeen = time.Now()
-	return user.limiter.Allow()
+
+	r := user.limiter.ReserveN(now, 1)
+	if !r.OK() || r.DelayFrom(now) > 0 {
+		r.CancelAt(now)
+		return nil, false
+	}
+	return r, true
 }
 
 func (u *userLimiter) deleteInactive(now time.Time) {

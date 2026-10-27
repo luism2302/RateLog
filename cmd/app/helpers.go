@@ -14,6 +14,8 @@ import (
 	"github.com/luism2302/RateLog/internal/views"
 )
 
+var ErrBodyTooLarge = errors.New("Review body too large")
+
 func (app *application) renderTemplate(responseWriter http.ResponseWriter, request *http.Request, status int, component templ.Component) {
 	var buffer bytes.Buffer
 	if err := component.Render(request.Context(), &buffer); err != nil {
@@ -103,12 +105,20 @@ func (app *application) ValidateGameID(id int, v *validator.Validator) {
 	}
 }
 
-func (app *application) parseAndValidateReviewForm(request *http.Request, v *validator.Validator) (views.ReviewFormValues, error) {
+func (app *application) parseAndValidateReviewForm(responseWriter http.ResponseWriter, request *http.Request, v *validator.Validator) (views.ReviewFormValues, error) {
+	request.Body = http.MaxBytesReader(responseWriter, request.Body, 32*1024)
+
 	if err := request.ParseForm(); err != nil {
+		var maxErr *http.MaxBytesError
+		switch {
+		case errors.As(err, &maxErr):
+			v.AddError("form", "Review too long, must be no more than 2000 characters")
+			return views.ReviewFormValues{}, ErrBodyTooLarge
+		}
 		return views.ReviewFormValues{}, err
 	}
 
-	body := request.PostForm.Get("body")
+	body := strings.TrimSpace(request.PostForm.Get("body"))
 	rating, err := strconv.Atoi(request.PostForm.Get("rating"))
 	if err != nil {
 		rating = -1

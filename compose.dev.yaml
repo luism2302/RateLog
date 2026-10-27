@@ -1,0 +1,23 @@
+# Solo para desarrollo: Postgres accesible desde tu máquina en localhost:5433 (para make live).
+#   docker compose -f compose.dev.yaml up -d db
+name: ratelog-dev
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      RATELOG_OWNER_PASSWORD: ${RATELOG_OWNER_PASSWORD}
+      RATELOG_APP_PASSWORD: ${RATELOG_APP_PASSWORD}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  pgdata:
+    # Nombre fijo para seguir usando el volumen de desarrollo que ya existe
+    name: ratelog_pgdata
