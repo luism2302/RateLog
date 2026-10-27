@@ -1,6 +1,6 @@
-# Lista blanca: se excluye todo y solo entran las fuentes necesarias para compilar.
-# Así un archivo nuevo con secretos (.env, claves, fixtures) nunca llega al contexto de build.
-# Los generados (output.css, *_templ.go) quedan fuera y se rehacen dentro del build.
+# Allowlist: everything is excluded and only the sources needed to build are let in.
+# This way a new file with secrets (.env, keys, fixtures) never reaches the build context.
+# Generated files (output.css, *_templ.go) are left out and rebuilt inside the build.
 *
 !go.mod
 !go.sum

@@ -1,4 +1,4 @@
-# Solo para desarrollo: Postgres accesible desde tu máquina en localhost:5433 (para make live).
+# Development only: Postgres reachable from your machine on localhost:5433 (for make live).
 #   docker compose -f compose.dev.yaml up -d db
 name: ratelog-dev
 
@@ -19,5 +19,5 @@ services:
 
 volumes:
   pgdata:
-    # Nombre fijo para seguir usando el volumen de desarrollo que ya existe
+    # Fixed name to keep using the existing development volume
     name: ratelog_pgdata

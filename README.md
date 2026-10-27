@@ -1,11 +1,11 @@
 # RateLog
 
-Busca videojuegos, guárdalos en tu biblioteca y escribe reseñas con calificación.
-Los datos de los juegos vienen de la [API de RAWG](https://rawg.io/apidocs).
+Search for video games, add them to your library, and write rated reviews.
+Game data comes from the [RAWG API](https://rawg.io/apidocs).
 
-## Instalación con Docker
+## Installation with Docker
 
-**Requisitos:** Docker con el plugin Compose (Docker Desktop o Docker Engine) y una clave gratuita de la API de RAWG.
+**Requirements:** Docker with the Compose plugin (Docker Desktop or Docker Engine) and a free RAWG API key.
 
 ```bash
 git clone https://github.com/luism2302/RateLog.git
@@ -13,76 +13,76 @@ cd RateLog
 cp .env.example .env
 ```
 
-Rellena `.env`:
+Fill in `.env`:
 
-- `RAWG_API_KEY`: tu clave de RAWG.
-- `DB_PASSWORD`, `RATELOG_OWNER_PASSWORD` y `RATELOG_APP_PASSWORD`: tres contraseñas **distintas**. Genera cada una con
-  `openssl rand -hex 24`.
+- `RAWG_API_KEY`: your RAWG API key.
+- `DB_PASSWORD`, `RATELOG_OWNER_PASSWORD` and `RATELOG_APP_PASSWORD`: three **different** passwords. Generate each one
+  with `openssl rand -hex 24`.
 
-Protege el archivo y arranca:
+Protect the file and start the app:
 
 ```bash
 chmod 600 .env
 docker compose up -d
 ```
 
-La primera vez, Docker descarga las imágenes y Postgres crea los roles de la base de datos. Después se aplican las
-migraciones y arranca la app. Comprueba el estado con `docker compose ps`:
+On the first run, Docker downloads the images and Postgres creates the database roles. Then the migrations are
+applied and the app starts. Check the status with `docker compose ps`:
 
-| Servicio  | Estado esperado                                         |
+| Service   | Expected status                                         |
 |-----------|---------------------------------------------------------|
 | `db`      | `healthy`                                               |
-| `migrate` | `exited (0)`: aplicó las migraciones y terminó          |
-| `app`     | `healthy`, unos segundos después                        |
+| `migrate` | `exited (0)`: it applied the migrations and finished    |
+| `app`     | `healthy`, a few seconds later                          |
 
-Abre **http://localhost:8000**.
+Open **http://localhost:8000**.
 
-> Las cookies de sesión solo viajan por HTTPS, con la excepción de `localhost`. Por eso, sin un proxy con HTTPS
-> delante, solo podrás iniciar sesión desde la misma máquina, entrando por `http://localhost:8000`.
+> Session cookies are only sent over HTTPS, with `localhost` as the exception. This means that, without an HTTPS
+> proxy in front, you can only sign in from the same machine, through `http://localhost:8000`.
 >
-> No cambies el `127.0.0.1` del puerto en `compose.yaml` por `0.0.0.0` para abrirla a otras máquinas: la app quedaría
-> expuesta sin HTTPS. Para usarla desde fuera, ponla detrás de un proxy inverso con HTTPS (por ejemplo, Caddy).
+> Don't change the port's `127.0.0.1` to `0.0.0.0` in `compose.yaml` to open it to other machines: the app would be
+> exposed without HTTPS. To use it from elsewhere, put it behind a reverse proxy with HTTPS (for example, Caddy).
 
-### Uso diario
+### Everyday use
 
 ```bash
-docker compose ps              # estado
-docker compose logs -f app     # logs de la app
-docker compose down            # parar (conserva los datos)
-docker compose down -v         # parar y BORRAR todos los datos
+docker compose ps              # status
+docker compose logs -f app     # app logs
+docker compose down            # stop (keeps your data)
+docker compose down -v         # stop and DELETE all data
 ```
 
-### Actualizar
+### Updating
 
-Cambia la versión de la imagen en `compose.yaml` (o define `RATELOG_IMAGE` en `.env`) y ejecuta:
+Change the image version in `compose.yaml` (or set `RATELOG_IMAGE` in `.env`) and run:
 
 ```bash
 docker compose pull
 docker compose up -d
 ```
 
-Las migraciones nuevas se aplican solas antes de que arranque la app.
+New migrations are applied automatically before the app starts.
 
-### Problemas frecuentes
+### Troubleshooting
 
-| Síntoma | Solución |
+| Symptom | Fix |
 |---|---|
-| `falta ... en .env` | Rellena esa variable en `.env`. |
-| `migrate` falla con `password authentication failed` | Los roles se crean solo la primera vez que arranca Postgres. Si cambiaste las contraseñas después, ejecuta `docker compose down -v` (**borra los datos**) y vuelve a arrancar. |
-| `db` no arranca: `permission denied` en `01-roles.sh` | Dale permiso de ejecución con `chmod +x db/init/01-roles.sh`. Después, `docker compose down -v` y `docker compose up -d`. |
-| El puerto 8000 está ocupado | Pon `RATELOG_PORT=8080` (u otro puerto) en `.env`. |
-| La búsqueda dice que el servicio no está disponible | Revisa `RAWG_API_KEY` en `.env` y ejecuta `docker compose up -d`. |
+| `... is missing from .env` | Fill in that variable in `.env`. |
+| `migrate` fails with `password authentication failed` | The roles are only created the first time Postgres starts. If you changed the passwords afterwards, run `docker compose down -v` (**deletes your data**) and start again. |
+| `db` doesn't start: `permission denied` on `01-roles.sh` | Make it executable with `chmod +x db/init/01-roles.sh`. Then run `docker compose down -v` and `docker compose up -d`. |
+| Port 8000 is already in use | Set `RATELOG_PORT=8080` (or another port) in `.env`. |
+| Search says the service is unavailable | Check `RAWG_API_KEY` in `.env` and run `docker compose up -d`. |
 
-## Desarrollo
+## Development
 
-Requisitos: Go, Node.js, [templ](https://templ.guide) y [goose](https://github.com/pressly/goose).
+Requirements: Go, Node.js, [templ](https://templ.guide) and [goose](https://github.com/pressly/goose).
 
 ```bash
-docker compose -f compose.dev.yaml up -d db   # Postgres en localhost:5433
-make live                                     # templ + servidor + Tailwind en modo watch
+docker compose -f compose.dev.yaml up -d db   # Postgres on localhost:5433
+make live                                     # templ + server + Tailwind in watch mode
 ```
 
-En desarrollo, `.env` necesita además `RATELOG_DB_DSN` y `RATELOG_MIGRATE_DSN` apuntando a `localhost:5433`. Las
-migraciones se aplican con `go run ./cmd/app -migrate`.
+In development, `.env` also needs `RATELOG_DB_DSN` and `RATELOG_MIGRATE_DSN` pointing to `localhost:5433`. Apply the
+migrations with `go run ./cmd/app -migrate`.
 
-Para construir la imagen: `docker build -t ratelog .`
+To build the image: `docker build -t ratelog .`
