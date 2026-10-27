@@ -1,0 +1,16 @@
+# Lista blanca: se excluye todo y solo entran las fuentes necesarias para compilar.
+# Así un archivo nuevo con secretos (.env, claves, fixtures) nunca llega al contexto de build.
+# Los generados (output.css, *_templ.go) quedan fuera y se rehacen dentro del build.
+*
+!go.mod
+!go.sum
+!package.json
+!package-lock.json
+!cmd/**/*.go
+!internal/**/*.go
+!internal/**/*.templ
+!migrations/*.go
+!migrations/*.sql
+!static/embed.go
+!static/css/input.css
+**/*_templ.go

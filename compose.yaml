@@ -1,0 +1,85 @@
+# RateLog: Postgres + migraciones + app.
+#   cp .env.example .env   (y rellénalo)
+#   docker compose up -d
+# La app queda en http://localhost:8000 (o en el puerto de RATELOG_PORT).
+name: ratelog
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-ratelog: &ratelog
+  <<: *logging
+  image: ${RATELOG_IMAGE:-luism2302/ratelog:v0.1.0}
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+
+services:
+  db:
+    <<: *logging
+    # Fijada por digest; para actualizar: docker buildx imagetools inspect postgres:<versión>
+    image: postgres:18.6@sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6
+    environment:
+      POSTGRES_USER: ${DB_USER:?falta DB_USER en .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?falta DB_PASSWORD en .env}
+      POSTGRES_DB: ${DB_NAME:?falta DB_NAME en .env}
+      RATELOG_OWNER_PASSWORD: ${RATELOG_OWNER_PASSWORD:?falta RATELOG_OWNER_PASSWORD en .env}
+      RATELOG_APP_PASSWORD: ${RATELOG_APP_PASSWORD:?falta RATELOG_APP_PASSWORD en .env}
+    volumes:
+      - postgres:/var/lib/postgresql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    pids_limit: 200
+    networks: [backend]
+    restart: unless-stopped
+
+  # Aplica las migraciones con el dueño del esquema y termina
+  migrate:
+    <<: *ratelog
+    command: ["-migrate"]
+    environment:
+      RATELOG_MIGRATE_DSN: postgres://ratelog_owner:${RATELOG_OWNER_PASSWORD}@db:5432/${DB_NAME}
+    healthcheck:
+      disable: true
+    networks: [backend]
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # El servidor, con un rol sin permisos para cambiar el esquema
+  app:
+    <<: *ratelog
+    environment:
+      RATELOG_DB_DSN: postgres://ratelog_app:${RATELOG_APP_PASSWORD}@db:5432/${DB_NAME}
+      RAWG_API_KEY: ${RAWG_API_KEY:?falta RAWG_API_KEY en .env}
+    # Solo en 127.0.0.1: para exponerla fuera de esta máquina, usa un proxy con HTTPS delante
+    ports:
+      - "127.0.0.1:${RATELOG_PORT:-8000}:8000"
+    mem_limit: 256m
+    pids_limit: 100
+    networks: [backend, frontend]
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+networks:
+  # Sin salida a internet: solo db, migrate y app se ven entre sí
+  backend:
+    internal: true
+  # Para el puerto publicado y las llamadas a la API de RAWG
+  frontend:
+
+volumes:
+  postgres:
